@@ -59,8 +59,10 @@
             android:name="itemId"
             app:argType="long" />
         <argument
-            android:name="lineItemId"
-            app:argType="long" />
+            android:name="product"
+            app:argType="com.codelectro.invoicemaker.entity.LineItem"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </fragment>
 
     <fragment

@@ -20,6 +20,7 @@ class MainViewModel @ViewModelInject constructor(
     }
 
     fun getProducts() = repository.getProducts()
+    fun getProduct(id: Long) = repository.getProduct(id)
 
     fun insertItem(item: Item): LiveData<Long> {
         val itemId = MutableLiveData<Long>()
@@ -53,7 +54,7 @@ class MainViewModel @ViewModelInject constructor(
         repository.updateLineItem(item)
     }
 
-    fun getLineItem(itemId: Long) = repository.getLineItems(itemId)
+    fun getLineItems(itemId: Long) = repository.getLineItems(itemId)
 
-
+    fun getLineItem(lineItemId: Long) = repository.getLineItem(lineItemId)
 }

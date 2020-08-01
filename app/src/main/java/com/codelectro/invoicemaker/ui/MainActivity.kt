@@ -25,13 +25,12 @@ class MainActivity : AppCompatActivity(), DrawerLocker {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val appBarConfiguration = AppBarConfiguration(setOf(
-            R.id.invoiceFragment, R.id.billFragment))
+        val appBarConfiguration = AppBarConfiguration(setOf(R.id.billFragment))
 
         val navController = Navigation.findNavController(this, R.id.nav_host_fragment)
         NavigationUI.setupActionBarWithNavController(this, navController, drawer_layout)
         NavigationUI.setupWithNavController(navigation_view, navController)
-        setupActionBarWithNavController(navController, appBarConfiguration)
+        //setupActionBarWithNavController(navController, appBarConfiguration)
 
     }
 

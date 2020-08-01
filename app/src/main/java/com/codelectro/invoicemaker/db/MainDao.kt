@@ -15,6 +15,9 @@ interface MainDao {
     @Query("SELECT * FROM products")
     fun getProducts(): LiveData<List<Product>>
 
+    @Query("SELECT * FROM products WHERE id = :id")
+    fun getProduct(id: Long): LiveData<Product>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(item: Item): Long
 
@@ -41,5 +44,8 @@ interface MainDao {
 
     @Query("SELECT * FROM line_items WHERE itemId = :itemId")
     fun getLineItems(itemId: Long): LiveData<List<LineItem>>
+
+    @Query("SELECT * FROM line_items WHERE id = :lineItemId")
+    fun getLineItem(lineItemId: Long): LiveData<LineItem>
 
 }

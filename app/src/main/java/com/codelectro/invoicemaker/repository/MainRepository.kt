@@ -19,6 +19,7 @@ class MainRepository @Inject constructor(
         mainDao.insertProduct(product)
 
     fun getProducts() = mainDao.getProducts()
+    fun getProduct(id: Long) = mainDao.getProduct(id)
 
     suspend fun insertItem(item: Item) = mainDao.insertItem(item)
     suspend fun updateItem(item: Item) = mainDao.updateItem(item)
@@ -30,4 +31,5 @@ class MainRepository @Inject constructor(
     suspend fun deleteLineItem(item: LineItem) = mainDao.deleteLineItem(item)
     suspend fun updateLineItem(item: LineItem) = mainDao.updateLineItem(item)
     fun getLineItems(itemId: Long) = mainDao.getLineItems(itemId)
+    fun getLineItem(lineItemId: Long) = mainDao.getLineItem(lineItemId)
 }

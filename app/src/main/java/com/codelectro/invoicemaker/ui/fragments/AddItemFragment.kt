@@ -10,16 +10,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.navArgs
 import com.codelectro.invoicemaker.R
 import com.codelectro.invoicemaker.adapter.DropDownAdapter
 import com.codelectro.invoicemaker.entity.Item
 import com.codelectro.invoicemaker.entity.LineItem
 import com.codelectro.invoicemaker.entity.Product
 import com.codelectro.invoicemaker.model.Price
-import com.codelectro.invoicemaker.ui.InvoiceViewModel
-import com.codelectro.invoicemaker.ui.MainViewModel
-import com.codelectro.invoicemaker.ui.formatNumber
-import com.codelectro.invoicemaker.ui.showToast
+import com.codelectro.invoicemaker.ui.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_add_item.*
 import timber.log.Timber
@@ -30,24 +28,33 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
 
     private val viewmodel: MainViewModel by viewModels()
     private val invoiceViewModel: InvoiceViewModel by viewModels()
-    private lateinit var product: Product
+    private val args: BillFragmentArgs by navArgs()
+    private var product: Product? = null
+    private var mutableProduct = MutableLiveData<Product>()
     private var subTotal: Float = 0.0f
     private var total: Float = 0.0f
     private var discountPrice: Float = 0.0f
+    private var unit: String? = null
 
     private var itemId by Delegates.notNull<Long>()
+    private var lineItem: LineItem? = null
 
     val item = MutableLiveData<Item>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val navController = Navigation.findNavController(view)
-        arguments?.let {
-            val args = BillFragmentArgs.fromBundle(requireArguments())
-            itemId = args.itemId
-        }
-
         setAllFieldVisible(false)
+
+        val navController = Navigation.findNavController(view)
+
+        itemId = arguments?.getLong("itemId")!!
+        lineItem = arguments?.getSerializable("lineItem") as LineItem?
+
+        if (lineItem != null) {
+            Timber.d("Data: $lineItem")
+            setEditProduct(lineItem?.id!!)
+            add_item.text = "Update Item"
+        }
 
         viewmodel.getProducts().observe(viewLifecycleOwner, Observer {
             Timber.d("products: $it")
@@ -66,11 +73,11 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
         radioGroupUnit.setOnCheckedChangeListener { group, checkedId ->
             when (checkedId) {
                 R.id.radioPrimaryUnit -> {
-                    setPrice(product)
+                    product?.let { setPrice(it) }
                     invoiceViewModel.isPrimaryUnit.value = true
                 }
                 R.id.radioSecondaryUnit -> {
-                    setPrice(product)
+                    product?.let { setPrice(it) }
                     invoiceViewModel.isPrimaryUnit.value = false
                 }
             }
@@ -85,7 +92,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                setPrice(product)
+                product?.let { setPrice(it) }
             }
 
         })
@@ -99,7 +106,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                setPrice(product)
+                product?.let { setPrice(it) }
             }
 
         })
@@ -107,32 +114,70 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
         add_item.setOnClickListener {
             val quantity = etQuantity.text.toString()
             if (quantity.isNotEmpty() && (radioPrimaryUnit.isChecked || radioSecondaryUnit.isChecked)) {
-                val lineItem = LineItem(
-                    subTotal = subTotal,
-                    total = total,
-                    name = product.name,
-                    quantity = quantity.toInt(),
-                    discount = discountPrice,
-                    productId = product.id!!,
-                    itemId = itemId
-                )
+                val lineItem = if (this.lineItem == null) {
+                    LineItem(
+                        subTotal = subTotal,
+                        total = total,
+                        name = product!!.name,
+                        unit = unit!!,
+                        quantity = quantity.toInt(),
+                        discount = discountPrice,
+                        productId = product!!.id!!,
+                        itemId = itemId
+                    )
+                } else {
+                    LineItem(
+                        id = this.lineItem!!.id,
+                        subTotal = subTotal,
+                        total = total,
+                        name = product!!.name,
+                        unit = unit!!,
+                        quantity = quantity.toInt(),
+                        discount = discountPrice,
+                        productId = product!!.id!!,
+                        itemId = itemId
+                    )
+                }
+
                 viewmodel.insertLineItem(lineItem)
-                viewmodel.getItem(itemId).removeObservers(viewLifecycleOwner)
-                viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
-                    if (viewLifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                        val updateItem = Item(
-                            id = it.id,
-                            subTotal = (subTotal + it.subTotal),
-                            discount = (discountPrice + it.discount),
-                            total = (total + it.total),
-                            totalLineItem = (it.totalLineItem + 1)
-                        )
-                        viewmodel.updateItem(updateItem)
-                    }
-                    val action =
-                        AddItemFragmentDirections.actionAddItemFragmentToBillFragment(itemId)
-                    navController.navigate(action)
-                })
+
+                if (this.lineItem == null) {
+                    viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
+                        if (viewLifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                            val updateItem = Item(
+                                id = it.id,
+                                subTotal = (subTotal + it.subTotal),
+                                discount = (discountPrice + it.discount),
+                                total = (total + it.total),
+                                totalLineItem = (it.totalLineItem + 1)
+                            )
+                            viewmodel.updateItem(updateItem)
+                        }
+                        val action =
+                            AddItemFragmentDirections.actionAddItemFragmentToBillFragment(itemId)
+                        navController.navigate(action)
+                    })
+                } else {
+                    viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
+                        Timber.d("Data: $it")
+                        Timber.d("Data: subTotal $subTotal")
+                        if (viewLifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                            val updateItem = Item(
+                                id = it.id,
+                                subTotal = (subTotal + it.subTotal) - this.lineItem!!.subTotal,
+                                discount = (discountPrice + (it.discount - this.lineItem!!.discount)),
+                                total = (total + (it.total - this.lineItem!!.total)),
+                                totalLineItem = (it.totalLineItem)
+                            )
+                            Timber.d("Data: Update $updateItem")
+                            viewmodel.updateItem(updateItem)
+                        }
+                        val action =
+                            AddItemFragmentDirections.actionAddItemFragmentToBillFragment(itemId)
+                        navController.navigate(action)
+                    })
+                }
+
             } else {
                 requireContext().showToast("Please select Unit and fill Quantity")
             }
@@ -146,14 +191,15 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
                 val lineItem = LineItem(
                     subTotal = subTotal,
                     total = total,
-                    name = product.name,
+                    unit = unit!!,
+                    name = product!!.name,
                     discount = discountPrice,
                     quantity = quantity.toInt(),
-                    productId = product.id!!,
+                    productId = product!!.id!!,
                     itemId = itemId
                 )
 
-                item.value?.let{
+                item.value?.let {
                     val updateItem = Item(
                         id = it.id,
                         subTotal = (subTotal + it.subTotal),
@@ -188,8 +234,31 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
         )
     }
 
+    private fun setEditProduct(lineItemId: Long) {
+        viewmodel.getLineItem(lineItemId).observe(viewLifecycleOwner, Observer { it ->
+            viewmodel.getProduct(it.productId).observe(viewLifecycleOwner, Observer { product ->
+                requireContext().showToast("$product")
+                etProduct.setText(it.name, false)
+                etQuantity.setText("${it.quantity}")
+                textInputDiscount.helperText = "Rs.${it.quantity}"
+                val discountPerCent = 100 - ((it.total / it.subTotal) * 100)
+                etDiscount.setText("$discountPerCent")
+                if (it.unit == radioPrimaryUnit.text.toString()) {
+                    radioGroupUnit.check(R.id.radioPrimaryUnit)
+                } else {
+                    radioGroupUnit.check(R.id.radioSecondaryUnit)
+                }
+                setAllFieldVisible(true)
+                setPrice(product)
+                this.product = product
+            })
+
+        })
+
+
+    }
+
     private fun setProducts(products: List<Product>) {
-        val arrayProduct = products.map { product -> product.name }.toTypedArray()
 
         val adapter = DropDownAdapter(requireContext(), products)
         etProduct.setAdapter(adapter)
@@ -202,6 +271,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
             setPrice(selection)
         }
 
+
     }
 
     private fun setUnit(product: Product) {
@@ -209,9 +279,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
         radioSecondaryUnit.text = product.secondaryUnit
     }
 
-
     private fun setPrice(product: Product) {
-
 
         val quantity = etQuantity.text.toString()
         var discountPerCent = etDiscount.text.toString()
@@ -219,12 +287,11 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
         if (quantity.isNotEmpty()) {
 
             if (discountPerCent.isEmpty()) discountPerCent = "0"
-
             val quantityFloat = quantity.toFloat()
-            var discountPerCentFloat = discountPerCent.toFloat()
 
             invoiceViewModel.isPrimaryUnit.observe(viewLifecycleOwner, Observer {
                 if (it) {
+                    unit = radioPrimaryUnit.text.toString()
                     subTotal = (product.sellingPrice * quantityFloat)
 
                     discountPrice =
@@ -242,6 +309,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
                         )
                     )
                 } else {
+                    unit = radioSecondaryUnit.text.toString()
                     subTotal =
                         ((product.sellingPrice / product.converterValue) * quantityFloat)
                     discountPrice =
@@ -278,6 +346,9 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
         tvTotal.visibility = if (isVisible) View.VISIBLE else View.GONE
         add_item.visibility = if (isVisible) View.VISIBLE else View.GONE
         save_item_continue.visibility = if (isVisible) View.VISIBLE else View.GONE
+        if (lineItem != null) {
+            save_item_continue.visibility = View.GONE
+        }
     }
 
 

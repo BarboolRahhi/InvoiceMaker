@@ -1,8 +1,12 @@
 package com.codelectro.invoicemaker.ui.fragments
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.MutableLiveData
@@ -39,6 +43,16 @@ class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<
 
     val item = MutableLiveData<Item>()
 
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        setHasOptionsMenu(true)
+        return super.onCreateView(inflater, container, savedInstanceState)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -59,12 +73,12 @@ class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<
         })
 
         add_item.setOnClickListener {
-            val action = BillFragmentDirections.actionBillFragmentToAddItemFragment(itemId, -1)
-            navController.navigate(action)
+            val bundle = bundleOf("itemId" to itemId)
+            findNavController().navigate(R.id.action_billFragment_to_addItemFragment, bundle)
         }
 
-        viewmodel.getLineItem(itemId).removeObservers(viewLifecycleOwner)
-        viewmodel.getLineItem(itemId).observe(viewLifecycleOwner, Observer {
+        viewmodel.getLineItems(itemId).removeObservers(viewLifecycleOwner)
+        viewmodel.getLineItems(itemId).observe(viewLifecycleOwner, Observer {
             Timber.d("TAG - bill $it")
             lineAdapter.submitList(it)
         })
@@ -90,20 +104,7 @@ class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val dialog = MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Exit Invoice")
-                    .setMessage("Cancel will delete your current invoice")
-                    .setNegativeButton("Continue") { dialog, _ ->
-                        dialog.cancel()
-                    }
-                    .setPositiveButton("Cancel") { dialog, _ ->
-                        viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
-                            viewmodel.deleteItem(it)
-                            findNavController().navigate(R.id.action_billFragment_to_invoiceFragment)
-                        })
-                    }
-                    .create()
-                dialog.show()
+               showDialog()
             }
 
         }
@@ -123,17 +124,19 @@ class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<
     }
 
     override fun onClick(view: View, data: LineItem) {
-        val action = BillFragmentDirections.actionBillFragmentToAddItemFragment(itemId, data.id!!)
-        navController.navigate(action)
+        val bundle = bundleOf("itemId" to itemId).apply {
+            putSerializable("lineItem", data)
+        }
+        findNavController().navigate(R.id.action_billFragment_to_addItemFragment, bundle)
     }
 
     override fun onDeleteClick(view: View, data: LineItem) {
-        item.value?.let{
+        item.value?.let {
             val updateItem = Item(
                 id = it.id,
                 subTotal = (it.subTotal - data.subTotal),
                 discount = (it.discount - data.discount),
-                total = (it.total - data.total ),
+                total = (it.total - data.total),
                 totalLineItem = (it.totalLineItem - 1)
             )
             Timber.d("TAG - add_item $it")
@@ -141,6 +144,36 @@ class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<
             viewmodel.deleteLineItem(data)
         }
 
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId) {
+            android.R.id.home -> {
+                showDialog()
+                true
+            }
+            else -> {
+                super.onOptionsItemSelected(item)
+            }
+        }
+
+    }
+
+    private fun showDialog() {
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Exit Invoice")
+            .setMessage("Cancel will delete your current invoice")
+            .setNegativeButton("Continue") { dialog, _ ->
+                dialog.cancel()
+            }
+            .setPositiveButton("Cancel") { dialog, _ ->
+                viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
+                    viewmodel.deleteItem(it)
+                    findNavController().navigate(R.id.action_billFragment_to_invoiceFragment)
+                })
+            }
+            .create()
+        dialog.show()
     }
 
 }
