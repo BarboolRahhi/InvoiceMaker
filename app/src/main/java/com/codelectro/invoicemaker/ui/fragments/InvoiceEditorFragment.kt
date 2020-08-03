@@ -1,6 +1,7 @@
 package com.codelectro.invoicemaker.ui.fragments
 
 import android.os.Bundle
+import android.view.Gravity.apply
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -23,16 +24,17 @@ import com.codelectro.invoicemaker.entity.LineItem
 import com.codelectro.invoicemaker.ui.InvoiceViewModel
 import com.codelectro.invoicemaker.ui.MainActivity
 import com.codelectro.invoicemaker.ui.MainViewModel
+import com.codelectro.invoicemaker.ui.showToast
 import com.codelectro.invoicemaker.util.VerticalSpacingItemDecoration
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_bill.*
+import kotlinx.android.synthetic.main.fragment_invoice_editor.*
 import timber.log.Timber
 import kotlin.properties.Delegates
 
 
 @AndroidEntryPoint
-class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<LineItem> {
+class InvoiceEditorFragment : Fragment(R.layout.fragment_invoice_editor), RecycleViewClickListener<LineItem> {
 
     private val viewmodel: MainViewModel by viewModels()
     private lateinit var lineAdapter: LineItemRecyclerViewAdapter
@@ -62,7 +64,7 @@ class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<
         lineAdapter = LineItemRecyclerViewAdapter()
 
         arguments?.let {
-            val args = BillFragmentArgs.fromBundle(requireArguments())
+            val args = InvoiceEditorFragmentArgs.fromBundle(requireArguments())
             itemId = args.itemId
         }
 
@@ -94,21 +96,28 @@ class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<
             }
         })
 
-        cbRecived.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (cbRecived.isChecked) {
-                etPaid.setText(tvTotal.text.substring(3, tvTotal.text.length))
-            } else {
-                etPaid.setText("0.0")
-            }
+        save_invoice_btn.setOnClickListener {
+            viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
+                if (it.totalLineItem >= 1) {
+                    val bundle = bundleOf().apply {
+                        putSerializable("item", it)
+                    }
+                    findNavController().navigate(R.id.action_billFragment_to_customerDetailFragment, bundle)
+                } else {
+                    requireContext().showToast("There is no item for bill. Add Item at least one Item")
+                }
+
+            })
+
         }
+
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-               showDialog()
+                showDialog()
             }
 
         }
-
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
 
         lineAdapter.setOnClickItemListener(this)
@@ -147,7 +156,7 @@ class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when(item.itemId) {
+        return when (item.itemId) {
             android.R.id.home -> {
                 showDialog()
                 true
@@ -166,8 +175,9 @@ class BillFragment : Fragment(R.layout.fragment_bill), RecycleViewClickListener<
             .setNegativeButton("Continue") { dialog, _ ->
                 dialog.cancel()
             }
-            .setPositiveButton("Cancel") { dialog, _ ->
+            .setPositiveButton("Cancel") { _, _ ->
                 viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
+                    viewmodel.deleteLineItemByItemId(it.id!!)
                     viewmodel.deleteItem(it)
                     findNavController().navigate(R.id.action_billFragment_to_invoiceFragment)
                 })

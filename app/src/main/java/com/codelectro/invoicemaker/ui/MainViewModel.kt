@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.codelectro.invoicemaker.entity.Item
 import com.codelectro.invoicemaker.entity.LineItem
 import com.codelectro.invoicemaker.entity.Product
+import com.codelectro.invoicemaker.entity.User
 import com.codelectro.invoicemaker.repository.MainRepository
 import kotlinx.coroutines.launch
 
@@ -50,6 +51,10 @@ class MainViewModel @ViewModelInject constructor(
         repository.deleteLineItem(item)
     }
 
+    fun deleteLineItemByItemId(itemId: Long) = viewModelScope.launch {
+        repository.deleteLineItemByItemId(itemId)
+    }
+
     fun updateLineItem(item: LineItem) = viewModelScope.launch {
         repository.updateLineItem(item)
     }
@@ -57,4 +62,18 @@ class MainViewModel @ViewModelInject constructor(
     fun getLineItems(itemId: Long) = repository.getLineItems(itemId)
 
     fun getLineItem(lineItemId: Long) = repository.getLineItem(lineItemId)
+
+
+    fun insertUser(user: User): LiveData<Long> {
+        val id = MutableLiveData<Long>()
+        viewModelScope.launch {
+            id.postValue(repository.insertUser(user))
+        }
+        return id
+    }
+
+    fun getUser(id: Long) = repository.getUser(id)
+
+    fun getUsersAndItems() = repository.getUsersAndItems()
+
 }

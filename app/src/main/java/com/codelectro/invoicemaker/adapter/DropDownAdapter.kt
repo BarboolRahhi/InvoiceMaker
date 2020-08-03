@@ -32,7 +32,7 @@ class DropDownAdapter(
         product?.let {
             tvName.text = it.name
         }
-        return view!!
+        return view
     }
 
     internal val filter: Filter = object : Filter() {

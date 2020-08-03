@@ -28,9 +28,7 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
 
     private val viewmodel: MainViewModel by viewModels()
     private val invoiceViewModel: InvoiceViewModel by viewModels()
-    private val args: BillFragmentArgs by navArgs()
     private var product: Product? = null
-    private var mutableProduct = MutableLiveData<Product>()
     private var subTotal: Float = 0.0f
     private var total: Float = 0.0f
     private var discountPrice: Float = 0.0f
@@ -221,11 +219,16 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
     }
 
     private fun resetForm() {
+        product = null
+        setAllFieldVisible(false)
         etProduct.setText("")
         etQuantity.setText("")
-        textInputDiscount.helperText = ""
         etDiscount.setText("")
         radioGroupUnit.clearCheck()
+        this.subTotal = 0.0f
+        this.total = 0.0f
+        this.discountPrice = 0.0f
+        textInputDiscount.helperText = ""
         invoiceViewModel._price.postValue(
             Price(
                 subTotal = 0.0f,

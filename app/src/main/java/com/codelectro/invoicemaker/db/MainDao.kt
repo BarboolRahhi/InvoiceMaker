@@ -2,9 +2,7 @@ package com.codelectro.invoicemaker.db
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.codelectro.invoicemaker.entity.Item
-import com.codelectro.invoicemaker.entity.LineItem
-import com.codelectro.invoicemaker.entity.Product
+import com.codelectro.invoicemaker.entity.*
 
 @Dao
 interface MainDao {
@@ -39,6 +37,9 @@ interface MainDao {
     @Delete
     suspend fun deleteLineItem(item: LineItem)
 
+    @Query("DELETE FROM line_items WHERE itemId = :itemId")
+    suspend fun deleteLineItemByItemId(itemId: Long)
+
     @Update
     suspend fun updateLineItem(item: LineItem)
 
@@ -47,5 +48,15 @@ interface MainDao {
 
     @Query("SELECT * FROM line_items WHERE id = :lineItemId")
     fun getLineItem(lineItemId: Long): LiveData<LineItem>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUser(user: User): Long
+
+    @Query("SELECT * FROM users WHERE id = :id")
+    fun getUser(id: Long): LiveData<User>
+
+    @Transaction
+    @Query("SELECT * FROM users")
+    fun getUsersAndItems(): LiveData<List<UserAndItem>>
 
 }

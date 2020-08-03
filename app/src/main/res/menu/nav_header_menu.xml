@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item  android:id="@+id/billFragment"
-        android:title="Bill"
+    <item  android:id="@+id/invoiceFragment"
+        android:title="Invoice"
         android:icon="@drawable/ic_bill"/>
     <item  android:id="@+id/productFragment"
         android:title="Products"

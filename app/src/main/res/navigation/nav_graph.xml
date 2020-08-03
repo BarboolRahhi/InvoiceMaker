@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/billFragment"
-        android:name="com.codelectro.invoicemaker.ui.fragments.BillFragment"
+        android:name="com.codelectro.invoicemaker.ui.fragments.InvoiceEditorFragment"
         android:label="Invoice Editor" >
         <action
             android:id="@+id/action_billFragment_to_addItemFragment"
@@ -20,6 +20,9 @@
             app:destination="@id/invoiceFragment"
             app:popUpTo="@id/invoiceFragment"
             app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_billFragment_to_customerDetailFragment"
+            app:destination="@id/customerDetailFragment" />
     </fragment>
     <fragment
         android:id="@+id/productFragment"
@@ -72,5 +75,18 @@
         <action
             android:id="@+id/action_invoiceFragment_to_billFragment"
             app:destination="@id/billFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/customerDetailFragment"
+        android:name="com.codelectro.invoicemaker.ui.fragments.CustomerDetailFragment"
+        android:label="CustomerDetailFragment" >
+        <argument
+            android:name="item"
+            app:argType="com.codelectro.invoicemaker.entity.Item" />
+        <action
+            android:id="@+id/action_customerDetailFragment_to_invoiceFragment"
+            app:destination="@id/invoiceFragment"
+            app:popUpTo="@id/invoiceFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
 </navigation>
