@@ -36,7 +36,10 @@ class MainRepository @Inject constructor(
     fun getLineItem(lineItemId: Long) = mainDao.getLineItem(lineItemId)
 
     suspend fun insertUser(user: User) = mainDao.insertUser(user)
+    suspend fun updateUser(user: User) = mainDao.updateUser(user)
+    suspend fun deleteUser(user: User) = mainDao.deleteUser(user)
     fun getUser(id: Long) = mainDao.getUser(id)
+
 
     fun getUsersAndItems() = mainDao.getUsersAndItems()
 }

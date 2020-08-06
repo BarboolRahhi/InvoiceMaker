@@ -34,7 +34,8 @@ import kotlin.properties.Delegates
 
 
 @AndroidEntryPoint
-class InvoiceEditorFragment : Fragment(R.layout.fragment_invoice_editor), RecycleViewClickListener<LineItem> {
+class InvoiceEditorFragment : Fragment(R.layout.fragment_invoice_editor),
+    RecycleViewClickListener<LineItem> {
 
     private val viewmodel: MainViewModel by viewModels()
     private lateinit var lineAdapter: LineItemRecyclerViewAdapter
@@ -102,7 +103,10 @@ class InvoiceEditorFragment : Fragment(R.layout.fragment_invoice_editor), Recycl
                     val bundle = bundleOf().apply {
                         putSerializable("item", it)
                     }
-                    findNavController().navigate(R.id.action_billFragment_to_customerDetailFragment, bundle)
+                    findNavController().navigate(
+                        R.id.action_billFragment_to_customerDetailFragment,
+                        bundle
+                    )
                 } else {
                     requireContext().showToast("There is no item for bill. Add Item at least one Item")
                 }
@@ -169,17 +173,25 @@ class InvoiceEditorFragment : Fragment(R.layout.fragment_invoice_editor), Recycl
     }
 
     private fun showDialog() {
+        val action = if (item.value?.userId == null) "Cancel" else "Exit"
+        val message =
+            if (item.value?.userId == null) "Cancel will delete your current invoice"
+            else "Exit current invoice"
+
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("Exit Invoice")
-            .setMessage("Cancel will delete your current invoice")
+            .setMessage(message)
             .setNegativeButton("Continue") { dialog, _ ->
                 dialog.cancel()
             }
-            .setPositiveButton("Cancel") { _, _ ->
+            .setPositiveButton(action) { _, _ ->
                 viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
-                    viewmodel.deleteLineItemByItemId(it.id!!)
-                    viewmodel.deleteItem(it)
-                    findNavController().navigate(R.id.action_billFragment_to_invoiceFragment)
+                    if (it.userId == null) {
+                        viewmodel.deleteItem(it)
+                        findNavController().navigate(R.id.action_billFragment_to_invoiceFragment)
+                    } else {
+                        findNavController().navigate(R.id.action_billFragment_to_invoiceFragment)
+                    }
                 })
             }
             .create()

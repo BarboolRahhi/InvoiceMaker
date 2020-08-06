@@ -72,8 +72,15 @@ class MainViewModel @ViewModelInject constructor(
         return id
     }
 
-    fun getUser(id: Long) = repository.getUser(id)
+    fun updateUser(user: User) = viewModelScope.launch {
+        repository.updateUser(user)
+    }
 
+    fun deleteUser(user: User) = viewModelScope.launch {
+        repository.deleteUser(user)
+    }
+
+    fun getUser(id: Long) = repository.getUser(id)
     fun getUsersAndItems() = repository.getUsersAndItems()
 
 }

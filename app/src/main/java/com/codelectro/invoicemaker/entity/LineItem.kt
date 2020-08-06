@@ -1,10 +1,19 @@
 package com.codelectro.invoicemaker.entity
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import java.io.Serializable
 
-@Entity(tableName = "line_items")
+@Entity(
+    tableName = "line_items",
+    foreignKeys = [ForeignKey(
+        entity = Item::class,
+        parentColumns = arrayOf("id"),
+        childColumns = arrayOf("itemId"),
+        onDelete = ForeignKey.CASCADE
+    )]
+)
 data class LineItem(
     @PrimaryKey(autoGenerate = true)
     val id: Long? = null,

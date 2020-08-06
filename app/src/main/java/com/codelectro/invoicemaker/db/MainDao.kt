@@ -52,11 +52,18 @@ interface MainDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: User): Long
 
+    @Update
+    suspend fun updateUser(user: User)
+
+    @Delete
+    suspend fun deleteUser(user: User)
+
     @Query("SELECT * FROM users WHERE id = :id")
     fun getUser(id: Long): LiveData<User>
 
     @Transaction
     @Query("SELECT * FROM users")
     fun getUsersAndItems(): LiveData<List<UserAndItem>>
+
 
 }

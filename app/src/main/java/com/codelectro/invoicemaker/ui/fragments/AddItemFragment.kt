@@ -165,7 +165,8 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
                                 subTotal = (subTotal + it.subTotal) - this.lineItem!!.subTotal,
                                 discount = (discountPrice + (it.discount - this.lineItem!!.discount)),
                                 total = (total + (it.total - this.lineItem!!.total)),
-                                totalLineItem = (it.totalLineItem)
+                                totalLineItem = (it.totalLineItem),
+                                userId = it.userId
                             )
                             Timber.d("Data: Update $updateItem")
                             viewmodel.updateItem(updateItem)

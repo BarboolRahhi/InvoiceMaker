@@ -90,7 +90,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
 
-    <com.google.android.material.checkbox.MaterialCheckBox
+    <CheckBox
         android:id="@+id/cbRecived"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -163,6 +163,7 @@
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etBalance"
+            android:focusable="false"
             android:inputType="numberDecimal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
