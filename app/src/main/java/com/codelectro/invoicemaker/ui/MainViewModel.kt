@@ -83,4 +83,6 @@ class MainViewModel @ViewModelInject constructor(
     fun getUser(id: Long) = repository.getUser(id)
     fun getUsersAndItems() = repository.getUsersAndItems()
 
+    fun getItemAndLineItems(itemId: Long) = repository.getItemAndLineItems(itemId)
+
 }

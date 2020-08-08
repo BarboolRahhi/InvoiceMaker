@@ -156,7 +156,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
 
     private fun addTableHeader(doc: Document) {
-        val table: Table = Table(UnitValue.createPercentArray(6)).useAllAvailableWidth()
+        val table: Table = Table(UnitValue.createPercentArray(7)).useAllAvailableWidth()
         table.setMarginTop(16f)
 
         val sn = Cell().add(Paragraph("S/N")).apply {
@@ -179,40 +179,98 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
         table.addCell(unit)
 
-        val discount = Cell().add(Paragraph("Discount")).apply {
-            setBackgroundColor(ColorConstants.ORANGE)
-        }
-        table.addCell(discount)
-
         val subTotal = Cell().add(Paragraph("Sub Total")).apply {
             setBackgroundColor(ColorConstants.ORANGE)
         }
         table.addCell(subTotal)
 
+        val discount = Cell().add(Paragraph("Discount")).apply {
+            setBackgroundColor(ColorConstants.ORANGE)
+        }
+        table.addCell(discount)
 
-        viewmodel.getLineItems(1).observe(viewLifecycleOwner, Observer {
-            it.forEachIndexed { index, lineItem ->
-                Timber.d("Table: ${index} - ${lineItem}")
+        val total = Cell().add(Paragraph("Total")).apply {
+            setBackgroundColor(ColorConstants.ORANGE)
+        }
+        table.addCell(total)
+
+        viewmodel.getItemAndLineItems(1).observe(viewLifecycleOwner, Observer {
+            Timber.d("Table: $it")
+            it.lineItems.forEachIndexed { index, lineItem ->
                 val sNum = Cell().add(Paragraph("${index + 1}"))
+                    .setTextAlignment(TextAlignment.CENTER)
                 table.addCell(sNum)
+
                 val nameCell = Cell().add(Paragraph(lineItem.name.capitalize()))
                 table.addCell(nameCell)
+
                 val quantityCell = Cell().add(Paragraph(lineItem.quantity.toString()))
+                    .setTextAlignment(TextAlignment.CENTER)
                 table.addCell(quantityCell)
 
                 val unit = lineItem.unit.split("-")[1]
                 val pricePerUnit = lineItem.subTotal / lineItem.quantity
-                val unitCell = Cell().add(Paragraph("Rs.$pricePerUnit/$unit"))
+                val unitCell = Cell().add(Paragraph("$pricePerUnit/$unit"))
+                    .setTextAlignment(TextAlignment.CENTER)
                 table.addCell(unitCell)
-                val discountCell = Cell().add(Paragraph("Rs.${lineItem.discount}"))
-                table.addCell(discountCell)
-                val subTotalCell = Cell().add(Paragraph("Rs.${lineItem.total}"))
+
+                val subTotalCell = Cell().add(Paragraph("${lineItem.subTotal}"))
+                    .setTextAlignment(TextAlignment.RIGHT)
                 table.addCell(subTotalCell)
+
+                val discountCell = Cell().add(Paragraph("${(lineItem.discount / lineItem.subTotal) * 100}%"))
+                    .setTextAlignment(TextAlignment.RIGHT)
+                table.addCell(discountCell)
+
+                val totalCell = Cell().add(Paragraph("${lineItem.total}"))
+                    .setTextAlignment(TextAlignment.RIGHT)
+                table.addCell(totalCell)
             }
             doc.add(table)
+
+            val tableFinal: Table = Table(UnitValue.createPercentArray(6)).useAllAvailableWidth()
+            tableFinal.setMarginTop(10f)
+
+            // sub total amount
+            val emptyCell = Cell(1, 3).add(Paragraph(""))
+                .setBorder(Border.NO_BORDER)
+            tableFinal.addCell(emptyCell)
+
+            val subTotalTextFinal = Cell(1, 2).add(Paragraph("SubTotal Amount"))
+            tableFinal.addCell(subTotalTextFinal)
+
+            val subTotalFinal = Cell(1, 1).add(Paragraph("Rs.${it.item.subTotal}"))
+                .setTextAlignment(TextAlignment.RIGHT)
+            tableFinal.addCell(subTotalFinal)
+
+            // Discount amount
+            val emptyCell2 = Cell(1, 3).add(Paragraph(""))
+                .setBorder(Border.NO_BORDER)
+            tableFinal.addCell(emptyCell2)
+
+            val discountTextFinal = Cell(1, 2).add(Paragraph("Discount Amount"))
+            tableFinal.addCell(discountTextFinal)
+
+            val discountFinal = Cell(1, 1).add(Paragraph("Rs.${it.item.discount}"))
+                .setTextAlignment(TextAlignment.RIGHT)
+            tableFinal.addCell(discountFinal)
+
+            // Total amount
+            val emptyCell3 = Cell(1, 3).add(Paragraph(""))
+                .setBorder(Border.NO_BORDER)
+            tableFinal.addCell(emptyCell3)
+
+            val totalTextFinal = Cell(1, 2).add(Paragraph("Total Amount"))
+            tableFinal.addCell(totalTextFinal)
+
+            val totalFinal = Cell(1, 1).add(Paragraph("Rs.${it.item.total}"))
+                .setTextAlignment(TextAlignment.RIGHT)
+            tableFinal.addCell(totalFinal)
+
+            doc.add(tableFinal)
+
             doc.close()
         })
-
 
     }
 

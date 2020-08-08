@@ -21,10 +21,7 @@ import com.codelectro.invoicemaker.adapter.LineItemRecyclerViewAdapter
 import com.codelectro.invoicemaker.adapter.RecycleViewClickListener
 import com.codelectro.invoicemaker.entity.Item
 import com.codelectro.invoicemaker.entity.LineItem
-import com.codelectro.invoicemaker.ui.InvoiceViewModel
-import com.codelectro.invoicemaker.ui.MainActivity
-import com.codelectro.invoicemaker.ui.MainViewModel
-import com.codelectro.invoicemaker.ui.showToast
+import com.codelectro.invoicemaker.ui.*
 import com.codelectro.invoicemaker.util.VerticalSpacingItemDecoration
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -66,36 +63,28 @@ class InvoiceEditorFragment : Fragment(R.layout.fragment_invoice_editor),
 
         arguments?.let {
             val args = InvoiceEditorFragmentArgs.fromBundle(requireArguments())
-            itemId = args.itemId
+            this.itemId = args.itemId
         }
 
 
-        viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
-            item.postValue(it)
-            Timber.d("TAG - add_item $it")
-        })
-
         add_item.setOnClickListener {
-            val bundle = bundleOf("itemId" to itemId)
+            val bundle = bundleOf("itemId" to this.itemId)
             findNavController().navigate(R.id.action_billFragment_to_addItemFragment, bundle)
         }
 
-        viewmodel.getLineItems(itemId).removeObservers(viewLifecycleOwner)
-        viewmodel.getLineItems(itemId).observe(viewLifecycleOwner, Observer {
-            Timber.d("TAG - bill $it")
-            lineAdapter.submitList(it)
+
+        viewmodel.getItemAndLineItems(this.itemId).observe(viewLifecycleOwner, Observer {
+            item.postValue(it.item)
+            Timber.d("TAG - ItemAndLine $it")
+            it.item.apply {
+                tvSubTotal.text = "Rs.${subTotal.roundDecimal()}"
+                tvDiscount.text = "Rs.${discount.roundDecimal()}"
+                tvTotal.text = "Rs.${total.roundDecimal()}"
+                tvItemCount.text = "Item List ($totalLineItem)"
+            }
+            lineAdapter.submitList(it.lineItems)
         })
 
-        viewmodel.getItem(itemId).removeObservers(viewLifecycleOwner)
-        viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
-            Timber.d("TAG - bill $it")
-            it?.let {
-                tvSubTotal.text = "Rs.${it.subTotal}"
-                tvDiscount.text = "Rs.${it.discount}"
-                tvTotal.text = "Rs.${it.total}"
-                tvItemCount.text = "Item List (${it.totalLineItem})"
-            }
-        })
 
         save_invoice_btn.setOnClickListener {
             viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {

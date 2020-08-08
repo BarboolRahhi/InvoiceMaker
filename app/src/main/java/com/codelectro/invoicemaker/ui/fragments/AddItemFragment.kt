@@ -21,6 +21,7 @@ import com.codelectro.invoicemaker.ui.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_add_item.*
 import timber.log.Timber
+import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 
 @AndroidEntryPoint
@@ -139,32 +140,33 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
 
                 viewmodel.insertLineItem(lineItem)
 
+                // for new Item
                 if (this.lineItem == null) {
                     viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
-                        if (viewLifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                            val updateItem = Item(
-                                id = it.id,
-                                subTotal = (subTotal + it.subTotal),
-                                discount = (discountPrice + it.discount),
-                                total = (total + it.total),
-                                totalLineItem = (it.totalLineItem + 1)
-                            )
-                            viewmodel.updateItem(updateItem)
-                        }
+                        val updateItem = Item(
+                            id = it.id,
+                            subTotal = (subTotal + it.subTotal).roundDecimal(),
+                            discount = (discountPrice + it.discount).roundDecimal(),
+                            total = (total + it.total).roundDecimal(),
+                            totalLineItem = (it.totalLineItem + 1),
+                            userId = it.userId
+                        )
+                        viewmodel.updateItem(updateItem)
+
                         val action =
                             AddItemFragmentDirections.actionAddItemFragmentToBillFragment(itemId)
                         navController.navigate(action)
                     })
-                } else {
+                } else { // for updating item
                     viewmodel.getItem(itemId).observe(viewLifecycleOwner, Observer {
                         Timber.d("Data: $it")
                         Timber.d("Data: subTotal $subTotal")
                         if (viewLifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
                             val updateItem = Item(
                                 id = it.id,
-                                subTotal = (subTotal + it.subTotal) - this.lineItem!!.subTotal,
-                                discount = (discountPrice + (it.discount - this.lineItem!!.discount)),
-                                total = (total + (it.total - this.lineItem!!.total)),
+                                subTotal = ((subTotal + it.subTotal) - this.lineItem!!.subTotal).roundDecimal(),
+                                discount = (discountPrice + (it.discount - this.lineItem!!.discount)).roundDecimal(),
+                                total = (total + (it.total - this.lineItem!!.total)).roundDecimal(),
                                 totalLineItem = (it.totalLineItem),
                                 userId = it.userId
                             )
@@ -201,10 +203,11 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
                 item.value?.let {
                     val updateItem = Item(
                         id = it.id,
-                        subTotal = (subTotal + it.subTotal),
-                        discount = (discountPrice + it.discount),
-                        total = (total + it.total),
-                        totalLineItem = (it.totalLineItem + 1)
+                        subTotal = (subTotal + it.subTotal).roundDecimal(),
+                        discount = (discountPrice + it.discount).roundDecimal(),
+                        total = (total + it.total).roundDecimal(),
+                        totalLineItem = (it.totalLineItem + 1),
+                        userId = it.userId
                     )
                     Timber.d("TAG - add_item $it")
                     viewmodel.updateItem(updateItem)
@@ -241,20 +244,21 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
     private fun setEditProduct(lineItemId: Long) {
         viewmodel.getLineItem(lineItemId).observe(viewLifecycleOwner, Observer { it ->
             viewmodel.getProduct(it.productId).observe(viewLifecycleOwner, Observer { product ->
-                requireContext().showToast("$product")
                 etProduct.setText(it.name, false)
                 etQuantity.setText("${it.quantity}")
-                textInputDiscount.helperText = "Rs.${it.quantity}"
+                // textInputDiscount.helperText = "Rs.${it.quantity}"
                 val discountPerCent = 100 - ((it.total / it.subTotal) * 100)
                 etDiscount.setText("$discountPerCent")
+                radioPrimaryUnit.text = product.primaryUnit
+                radioSecondaryUnit.text = product.secondaryUnit
                 if (it.unit == radioPrimaryUnit.text.toString()) {
                     radioGroupUnit.check(R.id.radioPrimaryUnit)
                 } else {
                     radioGroupUnit.check(R.id.radioSecondaryUnit)
                 }
-                setAllFieldVisible(true)
                 setPrice(product)
                 this.product = product
+                setAllFieldVisible(true)
             })
 
         })
@@ -334,8 +338,8 @@ class AddItemFragment : Fragment(R.layout.fragment_add_item) {
     }
 
     private fun setSubTotalPrice(subTotal: Float, total: Float) {
-        val stringSubTotal = (Math.round(subTotal * 100.0) / 100.0).formatNumber()
-        val stringTotal = (Math.round(total * 100.0) / 100.0).formatNumber()
+        val stringSubTotal = ((subTotal * 100.0).roundToInt() / 100.0).formatNumber()
+        val stringTotal = ((total * 100.0).roundToInt() / 100.0).formatNumber()
         tvSubTotal.text = "Rs.$stringSubTotal"
         tvTotal.text = "Rs.$stringTotal"
     }

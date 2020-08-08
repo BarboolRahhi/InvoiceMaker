@@ -42,4 +42,5 @@ class MainRepository @Inject constructor(
 
 
     fun getUsersAndItems() = mainDao.getUsersAndItems()
+    fun getItemAndLineItems(itemId: Long) = mainDao.getItemAndLineItems(itemId)
 }

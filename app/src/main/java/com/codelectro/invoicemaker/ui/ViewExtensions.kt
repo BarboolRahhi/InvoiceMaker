@@ -5,6 +5,7 @@ import android.widget.Toast
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.roundToInt
 
 fun Context.showToast(message: String) {
     Toast.makeText(this, message, Toast.LENGTH_LONG).show()
@@ -24,4 +25,8 @@ fun String.dateTimeFormat(): String {
 
 fun String.color(color: String): String {
     return "<font color=$color>$this</font>"
+}
+
+fun Float.roundDecimal(): Float {
+    return ((this * 100.0).roundToInt() / 100.0).toFloat()
 }

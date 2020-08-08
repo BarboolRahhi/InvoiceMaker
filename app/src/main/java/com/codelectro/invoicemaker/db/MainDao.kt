@@ -65,5 +65,7 @@ interface MainDao {
     @Query("SELECT * FROM users")
     fun getUsersAndItems(): LiveData<List<UserAndItem>>
 
-
+    @Transaction
+    @Query("SELECT * From items WHERE id = :itemId")
+    fun getItemAndLineItems(itemId: Long): LiveData<ItemAndLine>
 }
