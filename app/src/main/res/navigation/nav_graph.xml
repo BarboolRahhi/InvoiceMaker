@@ -75,11 +75,14 @@
         <action
             android:id="@+id/action_invoiceFragment_to_billFragment"
             app:destination="@id/billFragment" />
+        <action
+            android:id="@+id/action_invoiceFragment_to_pdfViewFragment"
+            app:destination="@id/pdfViewFragment" />
     </fragment>
     <fragment
         android:id="@+id/customerDetailFragment"
         android:name="com.codelectro.invoicemaker.ui.fragments.CustomerDetailFragment"
-        android:label="CustomerDetailFragment" >
+        android:label="Customer Details" >
         <argument
             android:name="item"
             app:argType="com.codelectro.invoicemaker.entity.Item" />
@@ -88,5 +91,13 @@
             app:destination="@id/invoiceFragment"
             app:popUpTo="@id/invoiceFragment"
             app:popUpToInclusive="true"/>
+    </fragment>
+    <fragment
+        android:id="@+id/pdfViewFragment"
+        android:name="com.codelectro.invoicemaker.ui.fragments.PdfViewFragment"
+        android:label="Invoice View" >
+        <argument
+            android:name="userAnditem"
+            app:argType="com.codelectro.invoicemaker.entity.UserAndItem" />
     </fragment>
 </navigation>

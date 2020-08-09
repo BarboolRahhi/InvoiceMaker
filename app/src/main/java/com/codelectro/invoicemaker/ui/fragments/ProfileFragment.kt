@@ -30,15 +30,15 @@ import com.itextpdf.layout.property.TextAlignment
 import com.itextpdf.layout.property.UnitValue
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.OutputStream
+import java.io.*
 
-
-const val CREATE_FILE = 1
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
+
+    companion object {
+        const val CREATE_FILE = 1
+    }
 
     private val viewmodel: MainViewModel by viewModels()
 
@@ -46,9 +46,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         super.onViewCreated(view, savedInstanceState)
         (activity as MainActivity).setDrawerEnabled(true)
 
-        //  initPdf()
+        initPdf()
 
-        addHeader(null)
+        //addHeader(null)
 
     }
 
@@ -59,11 +59,26 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             val uri = data?.data
             if (uri != null) {
                 val outputStream = requireContext().contentResolver.openOutputStream(uri)
-
+                val file =
+                    requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)!!.absolutePath + "/text1462.pdf/"
+                val filePath = File(file)
+                val input: InputStream = FileInputStream(filePath)
+                copyFile(input, outputStream!!)
+                input.close()
+                outputStream.flush()
 //                outputStream?.write("hi, my name is rahhi".toByteArray())
-                addHeader(outputStream!!)
+//                addHeader(outputStream!!)
                 outputStream.close()
             }
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun copyFile(input: InputStream, output: OutputStream) {
+        val buffer = ByteArray(1024)
+        var read: Int
+        while (input.read(buffer).also { read = it } != -1) {
+            output.write(buffer, 0, read)
         }
     }
 
@@ -87,7 +102,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             requireContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)!!.absolutePath + "/text1462.pdf/"
         val filePath = File(file)
 
-        val pdfDoc = PdfDocument(PdfWriter(filePath))
+        val pdfDoc = PdfDocument(PdfWriter(outputStream))
         val doc = Document(pdfDoc)
 
         val res: Resources = resources
@@ -194,7 +209,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
         table.addCell(total)
 
-        viewmodel.getItemAndLineItems(1).observe(viewLifecycleOwner, Observer {
+        viewmodel.getItemAndLineItems(4).observe(viewLifecycleOwner, Observer {
             Timber.d("Table: $it")
             it.lineItems.forEachIndexed { index, lineItem ->
                 val sNum = Cell().add(Paragraph("${index + 1}"))
@@ -271,10 +286,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
             doc.close()
         })
-
-    }
-
-    fun addRowInTable() {
 
     }
 

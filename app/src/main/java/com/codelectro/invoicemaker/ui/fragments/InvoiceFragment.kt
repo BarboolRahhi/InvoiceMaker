@@ -6,11 +6,13 @@ import android.view.View
 import android.widget.PopupMenu
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.codelectro.invoicemaker.R
 import com.codelectro.invoicemaker.adapter.InvoiceRecyclerViewAdapter
@@ -79,13 +81,20 @@ class InvoiceFragment : Fragment(R.layout.fragment_invoice),
                         InvoiceFragmentDirections.actionInvoiceFragmentToBillFragment(it)
                     }
                     navController.navigate(action!!)
-                    return@setOnMenuItemClickListener true
+                    true
+                }
+                R.id.show_pdf -> {
+                    val action = InvoiceFragmentDirections.actionInvoiceFragmentToPdfViewFragment(userAndItem)
+                    navController.navigate(action)
+                    true
                 }
                 R.id.delete -> {
                     userAndItem.user?.let { user -> viewmodel.deleteUser(user) }
+                    true
                 }
+
+                else -> false
             }
-            return@setOnMenuItemClickListener true
         }
         popupMenu.show()
     }

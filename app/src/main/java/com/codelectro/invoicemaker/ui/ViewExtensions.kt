@@ -15,12 +15,9 @@ fun Double.formatNumber(): String {
     return NumberFormat.getNumberInstance().format(this).toString()
 }
 
-fun String.dateTimeFormat(): String {
-    val date = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.ENGLISH).parse(this)
-    date?.let {
-        return SimpleDateFormat("dd MMM, yyyy h:mm a", Locale.ENGLISH).format(date)
-    }
-    return "No Date Time"
+fun Date.dateTimeFormat(): String {
+    val formatter = SimpleDateFormat("dd MMM, yyyy hh:mm a", Locale.ENGLISH)
+    return formatter.format(this)
 }
 
 fun String.color(color: String): String {

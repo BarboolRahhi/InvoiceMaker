@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.codelectro.invoicemaker.R
 import com.codelectro.invoicemaker.entity.UserAndItem
+import com.codelectro.invoicemaker.ui.dateTimeFormat
 import kotlinx.android.synthetic.main.invoice_view_item.view.*
 import kotlinx.android.synthetic.main.product_view_item.view.tvName
 import java.text.SimpleDateFormat
@@ -39,14 +40,12 @@ class InvoiceRecyclerViewAdapter :
     inner class UserAndItemViewholder(itemView: View): RecyclerView.ViewHolder(itemView) {
 
         fun bind(userAndItem: UserAndItem) = with(itemView) {
-            val formatter = SimpleDateFormat("dd MMM, yyyy hh:mm a", Locale.ENGLISH)
-            val date = formatter.format(userAndItem.item.date)
            userAndItem.apply {
                tvName.text = user?.customerName?.capitalize()
                tvTotal.text = "Rs.${item.total}"
                tvPaid.text = "Rs.${item.paid}"
                tvBalance.text = "Rs.${item.balance}"
-               tvDate.text = "Issued on $date"
+               tvDate.text = "Issued on ${item.date.dateTimeFormat()}"
                tvInvoice.text = "INV-${String.format("%03d" ,item.invoiceNumber)}"
                menuBtn.setOnClickListener {
                    clickListener.onMenuClick(it, this)
